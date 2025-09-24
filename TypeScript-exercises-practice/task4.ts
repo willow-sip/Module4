@@ -22,11 +22,11 @@ export const persons: Person[] = [
 ];
 
 export function isAdmin(person: Person): person is Admin{
-    return (person as Admin).type === 'admin';
+    return person.type === 'admin';
 }
 
 export function isUser(person: Person): person is User {
-    return (person as User).type === 'user';
+    return person.type === 'user';
 }
 
 export function logPerson(person: Person) {

@@ -1,5 +1,3 @@
-//a little stuck with this one: still got some errors with methods on lines 109, 113, 117
-
 interface User {
     type: 'user';
     name: string;
@@ -38,7 +36,8 @@ export type ApiResponse<T> = (
 );
 
 export type ApiResponseCallback<T> = (callback: (response: ApiResponse<T>) => void) => void;
-export function promisify<T>(func: ApiResponseCallback<T>): () => Promise<T> {
+export type PromiseReturn<T> = () => Promise<T>;
+export function promisify<T>(func: ApiResponseCallback<T>): PromiseReturn<T> {
     return () => new Promise<T>((resolve, reject) => {
         func((response) => {
             if (response.status === 'success') {
@@ -49,25 +48,6 @@ export function promisify<T>(func: ApiResponseCallback<T>): () => Promise<T> {
         });
     });
 }
-
-
-type OldApiObject<T> = {
-    [K in keyof T]: ApiResponseCallback<T[K]>
-};
-type PromisifiedApi<T> = {
-    [K in keyof T]: () => Promise<T>
-};
-
-export function promisifyAll<T extends {[key: string]: any}>(api: OldApiObject<T>): PromisifiedApi<T> {
-    const result: Partial<PromisifiedApi<T>> = {};
-    for (const key of Object.keys(api) as (keyof T)[]) {
-        result[key] = promisify(api[key]);
-    }
-    return result as PromisifiedApi<T>;
-}
-
-
-
 
 const oldApi = {
     requestAdmins(callback: (response: ApiResponse<Admin[]>) => void) {
@@ -96,7 +76,12 @@ const oldApi = {
     }
 };
 
-const api = promisifyAll(oldApi);
+export const api = {
+    requestAdmins: promisify(oldApi.requestAdmins),
+    requestUsers: promisify(oldApi.requestUsers),
+    requestCurrentServerTime: promisify(oldApi.requestCurrentServerTime),
+    requestCoffeeMachineQueueLength: promisify(oldApi.requestCoffeeMachineQueueLength)
+};
 
 function logPerson(person: Person) {
     console.log(
